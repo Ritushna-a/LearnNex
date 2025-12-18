@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "1068251869578",
+    "firebase_url": "https://learn-nex-5d3c7-default-rtdb.firebaseio.com",
+    "project_id": "learn-nex-5d3c7",
+    "storage_bucket": "learn-nex-5d3c7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1068251869578:android:b127730f4e1385fb2cd873",
+        "android_client_info": {
+          "package_name": "com.example.learnnex"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDvnSK2zqPDUk-bAdijDtZmQjfeIHgSWk4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
