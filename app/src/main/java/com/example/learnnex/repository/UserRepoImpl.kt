@@ -37,9 +37,10 @@ class UserRepoImpl: UserRepo {
         auth.createUserWithEmailAndPassword(email,password)
             .addOnCompleteListener {
                 if (it.isSuccessful){
+                    val uid = auth.currentUser?.uid ?: ""
                     callback(true,"Registration success","${auth.currentUser?.uid}")
                 }else{
-                    callback(true,"${it.exception?.message}","")
+                    callback(false,"${it.exception?.message}","")
                 }
             }
     }
@@ -130,7 +131,7 @@ class UserRepoImpl: UserRepo {
             if (it.isSuccessful){
                 callback(true,"Profile updated successfully")
             }else{
-                callback(false,"${it.exception?.message}")
+                callback(false,it.exception?.message ?: "Failed to update profile")
             }
         }
     }
@@ -147,5 +148,9 @@ class UserRepoImpl: UserRepo {
                     callback(false,"${it.exception?.message}")
                 }
             }
+    }
+
+    override fun logout() {
+        auth.signOut()
     }
 }

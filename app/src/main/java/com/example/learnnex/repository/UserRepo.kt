@@ -43,4 +43,6 @@ interface UserRepo {
         email: String,
         callback: (Boolean, String) -> Unit
     )
+
+    fun logout()
 }

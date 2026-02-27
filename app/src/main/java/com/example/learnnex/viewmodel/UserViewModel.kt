@@ -44,7 +44,7 @@ class UserViewModel(val repo: UserRepo): ViewModel(){
 
     }
 
-    fun getAllUser(userId: String){
+    fun getAllUser(){
         repo.getAllUser  { success, data ->
             if (success) {
                 _allUsers.postValue(data)
@@ -71,5 +71,9 @@ class UserViewModel(val repo: UserRepo): ViewModel(){
         email: String,
         callback: (Boolean, String) -> Unit){
         repo.forgetPassword(email,callback)
+    }
+
+    fun logout(){
+        repo.logout()
     }
 }
