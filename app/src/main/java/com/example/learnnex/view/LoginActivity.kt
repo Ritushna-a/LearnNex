@@ -10,30 +10,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -53,7 +35,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.learnnex.R
-import com.example.learnnex.model.UserModel
 import com.example.learnnex.repository.UserRepoImpl
 import com.example.learnnex.ui.theme.Blue
 import com.example.learnnex.ui.theme.DarkBlue
@@ -66,207 +47,103 @@ class LoginActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            LoginBody()
-
-        }
+            LoginBody() }
     }
 }
 
 @Composable
 fun LoginBody() {
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
-    val loginViewModel = remember { UserViewModel(UserRepoImpl()) }
+    var isLoading by remember { mutableStateOf(false) }
 
+    val loginViewModel = remember { UserViewModel(UserRepoImpl()) }
     val context = LocalContext.current
     val activity = context as Activity
 
-
-    val snackbarHostState = remember { SnackbarHostState() }
-    val coroutineScope = rememberCoroutineScope ()
-
-    var showDialog by remember { mutableStateOf(false) }
-
-    val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-
-    val localEmail: String? = sharedPreferences.getString("email", "")
-    val localPassword: String? = sharedPreferences.getString("password", "")
-
-
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        }
-    ) { padding ->
-       LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Purple,
-                            Blue
-                        )
-                    )
-                )
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(Purple, Blue)))) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+            Text("Welcome Back", fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
+            Text("Sign in to continue LearnNex", color = Color.White.copy(alpha = 0.7f))
 
-           item {
-               Spacer(modifier = Modifier.height(80.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
-               Text(
-                   text = "Login",
-                   fontSize = 28.sp,
-                   fontWeight = FontWeight.Bold,
-                   color = Color.White
-               )
+            Card(
+                shape = RoundedCornerShape(28.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.95f)),
+                elevation = CardDefaults.cardElevation(10.dp)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    OutlinedTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        label = { Text("Email") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text("Password") },
+                        visualTransformation = if (visibility) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            IconButton(onClick = { visibility = !visibility }) {
+                                Icon(painterResource(if (visibility) R.drawable.outline_visibility_24 else R.drawable.outline_visibility_off_24), null)
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
 
-               Spacer(modifier = Modifier.height(40.dp))
+                    Text(
+                        "Forgot Password?",
+                        modifier = Modifier.fillMaxWidth().clickable {
+                            context.startActivity(Intent(context, ForgetPasswordActivity::class.java))
+                        }.padding(vertical = 8.dp),
+                        textAlign = TextAlign.End,
+                        color = Blue,
+                        fontSize = 14.sp
+                    )
 
-               OutlinedTextField(
-                   value = email,
-                   onValueChange = { data ->
-                       email = data
-                   },
-                   keyboardOptions = KeyboardOptions(
-                       keyboardType = KeyboardType.Email
-                   ),
-                   placeholder = {
-                       Text("abc@gmail.com")
-                   },
-                   colors = TextFieldDefaults.colors(
-                       unfocusedContainerColor = PurpleGrey80,
-                       focusedContainerColor = PurpleGrey80,
-                       focusedIndicatorColor = Blue,
-                       unfocusedIndicatorColor = Color.Transparent
-                   ),
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .padding(horizontal = 15.dp),
-                   shape = RoundedCornerShape(30.dp)
-               )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-               Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = {
+                            isLoading = true
+                            loginViewModel.login(email.trim(), password.trim()) { success, msg ->
+                                isLoading = false
+                                if (success) {
+                                    context.startActivity(Intent(context, DashboardActivity::class.java))
+                                    activity.finish()
+                                }
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                    ) {
+                        if (isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
+                        else Text("Login")
+                    }
+                }
+            }
 
-               OutlinedTextField(
-                   value = password,
-                   onValueChange = { data ->
-                       password = data
-                   },
-                   placeholder = {
-                       Text("********")
-
-                   },
-                   trailingIcon = {
-                       IconButton(onClick = {
-                           visibility = !visibility
-                       }) {
-                           Icon(
-                               painter = if (visibility)
-                                   painterResource(R.drawable.outline_visibility_24)
-                               else
-                                   painterResource(R.drawable.outline_visibility_off_24),
-                               contentDescription = null
-                           )
-                       }
-                   },
-                   visualTransformation = if (!visibility) PasswordVisualTransformation() else VisualTransformation.None,
-                   colors = TextFieldDefaults.colors(
-                       unfocusedContainerColor = PurpleGrey80,
-                       focusedContainerColor = PurpleGrey80,
-                       focusedIndicatorColor = Blue,
-                       unfocusedIndicatorColor = Color.Transparent
-                   ),
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .padding(horizontal = 15.dp),
-                   shape = RoundedCornerShape(30.dp)
-               )
-
-               Spacer(modifier = Modifier.height(10.dp))
-               Text(
-                   text = "Forgot password?", color = Color.Blue,
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .padding(horizontal = 15.dp)
-                       .clickable {
-                           val intent = Intent(context, ForgetPasswordActivity::class.java)
-                           context.startActivity(intent)
-                           activity.finish()
-                       },
-                   style = TextStyle(textAlign = TextAlign.End)
-               )
-               Spacer(modifier = Modifier.height(20.dp))
-               Button(
-                   onClick = {
-                       loginViewModel.login(email, password){
-                               success, message ->
-                           if (success){
-                               val user = UserModel(
-                                   email= email
-                               )
-                               Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                               val intent = Intent(
-                                   context,
-                                   DashboardActivity::class.java
-                               )
-                               context.startActivity(intent)
-                               activity.finish()
-                           }else{
-                               Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-                           }
-                       }
-
-                   },
-                   modifier = Modifier
-                       .fillMaxWidth()
-                       .padding(horizontal = 20.dp)
-                       .height(55.dp),
-                   shape = RoundedCornerShape(30.dp),
-                   colors = ButtonDefaults.buttonColors(
-                       containerColor = DarkBlue
-                   )
-               ) {
-                   Text("Login", color = Color.White, fontSize = 16.sp)
-               }
-
-               Spacer(modifier = Modifier.height(16.dp))
-
-
-               Text(
-                   buildAnnotatedString {
-                       append("Don't have account? ")
-
-                       withStyle(SpanStyle(color = DarkBlue)) {
-                           append("Sign up")
-                       }
-                   },
-                   modifier = Modifier
-                       .padding(start = 20.dp, top = 16.dp)
-                       .fillMaxWidth()
-                       .clickable {
-                           val intent = Intent(context, RegistrationActivity::class.java)
-                           context.startActivity(intent)
-                       },
-                   textAlign = TextAlign.Start,
-                   color = Color.White
-               )
-           }
-       }
+            TextButton(onClick = { context.startActivity(Intent(context, RegistrationActivity::class.java)) }) {
+                Text("New here? Create Account", color = Color.White)
+            }
+        }
     }
 }
-
-
-
 
 @Preview
 @Composable
 fun LoginPreview() {
     LoginBody()
 }
-
-

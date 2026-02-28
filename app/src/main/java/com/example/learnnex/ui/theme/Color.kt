@@ -14,3 +14,12 @@ val Blue = Color(0xFF5C6BC0)
 
 val White = Color(0xFFFBFBFD)
 val DarkBlue= Color(0xFF2222A6)
+
+val PrimaryBlue = Color(0xFF1A73E8)
+val SecondaryBlue = Color(0xFFE8F0FE)
+val BackgroundWhite = Color(0xFFF8F9FA)
+val DarkText = Color(0xFF202124)
+val SurfaceColor = Color(0xFFFFFFFF)
+val ErrorRed = Color(0xFFD93025)
+val GradientStart = Color(0xFF1A73E8)
+val GradientEnd = Color(0xFF673AB7)

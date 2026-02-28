@@ -59,23 +59,14 @@ class UserRepoImpl: UserRepo {
         }
     }
 
-    override fun getUserById(
-        userId: String,
-        callback: (Boolean, UserModel?) -> Unit
-    ) {
-        ref.child(userId).addValueEventListener(object : ValueEventListener{
+    override fun getUserById(userId: String, callback: (Boolean, UserModel?) -> Unit) {
+        ref.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                if (snapshot.exists()){
-                    val user = snapshot.getValue(UserModel::class.java)
-                    if (user != null){
-                        callback(true,user)
-                    }
-                }
-
+                val user = snapshot.getValue(UserModel::class.java)
+                callback(user != null, user)
             }
-
             override fun onCancelled(error: DatabaseError) {
-                callback(false,null)
+                callback(false, null)
             }
         })
     }

@@ -55,14 +55,14 @@ fun SplashBody(){
         Column (
             modifier = Modifier
                 .fillMaxSize()
-                .padding().background(Color.Black),
+                .padding().background(Color.White),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ){
             Image(
                 painter = painterResource(R.drawable.logo),
                 contentDescription = null,
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier.size(100.dp)
             )
             Spacer(modifier = Modifier.height(20.dp))
             CircularProgressIndicator(
