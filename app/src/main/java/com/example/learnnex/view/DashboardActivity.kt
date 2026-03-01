@@ -1,13 +1,14 @@
 package com.example.learnnex.view
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,11 +26,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.learnnex.R
+import com.example.learnnex.model.CourseModel
+import com.example.learnnex.repository.UserRepoImpl
 import com.example.learnnex.ui.theme.Blue
 import com.example.learnnex.ui.theme.White
+import com.example.learnnex.viewmodel.UserViewModel
 
+data class NavItem(val label: String, val icon: Int)
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,110 +47,96 @@ class DashboardActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashboardBody(){
-
-    val context= LocalContext.current
+fun DashboardBody() {
+    val context = LocalContext.current
     val activity = context as Activity
 
-
-    val email = activity.intent.getStringExtra("email")
-    val password = activity.intent.getStringExtra("password")
-
-    data class NavItem(val label: String,val icon: Int)
+    val userViewModel = remember { UserViewModel(UserRepoImpl()) }
     var selectedIndex by remember { mutableStateOf(0) }
 
-    var ListNav = listOf(
-        NavItem(
-            label = "Home",
-            icon = R.drawable.outline_home_24,
-        ),
-        NavItem(
-            label = "Search",
-            icon = R.drawable.baseline_search_24,
-        ),
-        NavItem(
-            label = "Profile",
-            icon = R.drawable.outline_person_24,
-        ),
-        NavItem(
-            label = "More",
-            icon = R.drawable.baseline_more_horiz_24,
+    var showAddCourse by remember { mutableStateOf(false) }
+    var editingCourse by remember { mutableStateOf<CourseModel?>(null) }
+    var viewingCourse by remember { mutableStateOf<CourseModel?>(null) }
+
+    val currentUser = userViewModel.getCurrentUser()
+    val isAdmin = currentUser?.email == "admin@gmail.com"
+
+    if (showAddCourse || editingCourse != null) {
+        AddCourseScreen(
+            viewModel = userViewModel,
+            onBack = {
+                showAddCourse = false
+                editingCourse = null
+            },
+            existingCourse = editingCourse
         )
-    )
-    Scaffold (
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Blue,
-                    actionIconContentColor = White,
-                    titleContentColor = White,
-                    navigationIconContentColor = White
-                ),
-                title = {Text("Dashboard")},
-                navigationIcon = {
-                    IconButton(onClick = {
-                        activity.finish()
-                    }) {
-                        Icon(
-                            painter = painterResource(R.drawable.outline_arrow_back_ios_24),
-                            contentDescription = null
+    } else if (viewingCourse != null) {
+        CourseContentScreen(
+            course = viewingCourse!!,
+            viewModel = userViewModel,
+            onBack = { viewingCourse = null }
+        )
+    } else {
+        val ListNav = listOf(
+            NavItem("Home", R.drawable.outline_home_24),
+            NavItem("My Courses", R.drawable.baseline_book_24),
+            NavItem("Profile", R.drawable.outline_person_24),
+            NavItem("Settings", R.drawable.baseline_settings_24)
+        )
+
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Blue,
+                        titleContentColor = White,
+                        navigationIconContentColor = White
+                    ),
+                    title = {
+                        Text(when(selectedIndex) {
+                            0 -> "LearnNex"
+                            1 -> "Enrolled Courses"
+                            2 -> "Profile"
+                            else -> "Settings"
+                        })
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            val intent = Intent(activity, LoginActivity::class.java)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            activity.startActivity(intent)
+                        }) {
+                            Icon(painterResource(R.drawable.outline_arrow_back_ios_24), null)
+                        }
+                    }
+                )
+            },
+            bottomBar = {
+                NavigationBar(containerColor = White) {
+                    ListNav.forEachIndexed { index, item ->
+                        NavigationBarItem(
+                            icon = { Icon(painterResource(item.icon), null) },
+                            label = { Text(item.label) },
+                            onClick = { selectedIndex = index },
+                            selected = selectedIndex == index
                         )
                     }
-                },
-                actions = {
-                    IconButton(onClick = {
-                    }) {
-                        Icon(
-                            painter = painterResource(R.drawable.baseline_settings_24),
-                            contentDescription = null
-                        )
-                    }
-                }
-            )
-        },
-        bottomBar = {
-            NavigationBar {
-                ListNav.forEachIndexed {index, item ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                painter = painterResource(item.icon),
-                                contentDescription = null
-                            )
-                        },
-                        label = {
-                            Text(item.label)
-                        },
-                        onClick = {
-                            selectedIndex = index
-                        },
-                        selected = selectedIndex == index
-                    )
                 }
             }
-        }
-
-    ){ padding->
-        LazyColumn (
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ){
-            item {
+        ) { padding ->
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
                 when (selectedIndex) {
-                    0 -> HomeScreen()
-                    1 -> SearchScreen()
-                    2 -> NotificationScreen()
-                    3 -> MoreScreen()
-                    else -> HomeScreen()
+                    0 -> HomeScreen(
+                        viewModel = userViewModel,
+                        onNavigateToAdd = { showAddCourse = true },
+                        onNavigateToEdit = { editingCourse = it },
+                        onNavigateToContent = { viewingCourse = it }
+                    )
+                    1 -> MyCoursesScreen(userViewModel, onNavigateToContent = { viewingCourse = it })
+                    2 -> ProfileScreen()
+                    3 -> SettingsScreen()
                 }
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun PreviewDashboard(){
-    DashboardBody()
 }

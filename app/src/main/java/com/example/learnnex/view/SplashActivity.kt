@@ -62,7 +62,7 @@ fun SplashBody(){
             Image(
                 painter = painterResource(R.drawable.logo),
                 contentDescription = null,
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(300.dp)
             )
             Spacer(modifier = Modifier.height(20.dp))
             CircularProgressIndicator(
