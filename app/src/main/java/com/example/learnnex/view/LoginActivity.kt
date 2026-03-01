@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
@@ -83,7 +84,7 @@ fun LoginBody() {
                         value = email,
                         onValueChange = { email = it },
                         label = { Text("Email") },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("email"),
                         shape = RoundedCornerShape(12.dp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
@@ -97,7 +98,7 @@ fun LoginBody() {
                                 Icon(painterResource(if (visibility) R.drawable.outline_visibility_24 else R.drawable.outline_visibility_off_24), null)
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().testTag("password"),
                         shape = RoundedCornerShape(12.dp)
                     )
 
@@ -125,7 +126,7 @@ fun LoginBody() {
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp).testTag("login"),
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
                     ) {
@@ -135,7 +136,10 @@ fun LoginBody() {
                 }
             }
 
-            TextButton(onClick = { context.startActivity(Intent(context, RegistrationActivity::class.java)) }) {
+            TextButton(
+                onClick = { context.startActivity(Intent(context, RegistrationActivity::class.java)) },
+                modifier = Modifier.testTag("register")
+            ) {
                 Text("New here? Create Account", color = Color.White)
             }
         }

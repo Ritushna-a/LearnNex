@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -91,8 +92,8 @@ fun RegistrationBody() {
             Text("Create Account", fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(modifier = Modifier.height(30.dp))
 
-            RegistrationTextField(name, { name = it }, "Username")
-            RegistrationTextField(email, { email = it }, "Email", KeyboardType.Email)
+            RegistrationTextField(name, { name = it }, "Username", modifier = Modifier.testTag("name"))
+            RegistrationTextField(email, { email = it }, "Email", KeyboardType.Email, modifier = Modifier.testTag("email"))
 
             OutlinedTextField(
                 value = selectedDate,
@@ -102,7 +103,8 @@ fun RegistrationBody() {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 15.dp, vertical = 8.dp)
-                    .clickable { datePicker.show() },
+                    .clickable { datePicker.show() }
+                    .testTag("dob"),
                 enabled = false,
                 colors = TextFieldDefaults.colors(
                     disabledContainerColor = PurpleGrey80,
@@ -113,10 +115,10 @@ fun RegistrationBody() {
                 shape = RoundedCornerShape(15.dp)
             )
 
-            RegistrationTextField(phone, { phone = it }, "Phone Number", KeyboardType.Phone)
+            RegistrationTextField(phone, { phone = it }, "Phone Number", KeyboardType.Phone, modifier = Modifier.testTag("phone"))
 
-            PasswordTextField(password, { password = it }, "Password", visibility) { visibility = !visibility }
-            PasswordTextField(confirmPassword, { confirmPassword = it }, "Confirm Password", visibility) { visibility = !visibility }
+            PasswordTextField(password, { password = it }, "Password", visibility, { visibility = !visibility }, modifier = Modifier.testTag("password"))
+            PasswordTextField(confirmPassword, { confirmPassword = it }, "Confirm Password", visibility, { visibility = !visibility }, modifier = Modifier.testTag("confirmPassword"))
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp),
@@ -125,7 +127,8 @@ fun RegistrationBody() {
                 Checkbox(
                     checked = terms,
                     onCheckedChange = { terms = it },
-                    colors = CheckboxDefaults.colors(checkedColor = DarkBlue, checkmarkColor = Color.White)
+                    colors = CheckboxDefaults.colors(checkedColor = DarkBlue, checkmarkColor = Color.White),
+                    modifier = Modifier.testTag("terms")
                 )
                 Text("I agree to terms & Conditions", color = Color.White, fontSize = 14.sp)
             }
@@ -162,7 +165,7 @@ fun RegistrationBody() {
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(55.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 15.dp).height(55.dp).testTag("signUp"),
                 enabled = !isLoading,
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 shape = RoundedCornerShape(15.dp)
@@ -183,7 +186,7 @@ fun RegistrationBody() {
                 modifier = Modifier.clickable {
                     context.startActivity(Intent(context, LoginActivity::class.java))
                     activity?.finish()
-                },
+                }.testTag("signInLink"),
                 color = Color.White,
                 textAlign = TextAlign.Center
             )
@@ -196,14 +199,15 @@ fun RegistrationTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         placeholder = { Text(label) },
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp, vertical = 8.dp),
         shape = RoundedCornerShape(15.dp),
@@ -222,7 +226,8 @@ fun PasswordTextField(
     onValueChange: (String) -> Unit,
     label: String,
     visibility: Boolean,
-    onVisibilityToggle: () -> Unit
+    onVisibilityToggle: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     OutlinedTextField(
         value = value,
@@ -237,7 +242,7 @@ fun PasswordTextField(
                 )
             }
         },
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 15.dp, vertical = 8.dp),
         shape = RoundedCornerShape(15.dp),

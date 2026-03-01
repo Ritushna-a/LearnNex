@@ -9,6 +9,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +28,7 @@ fun AddCourseScreen(
     var desc by remember { mutableStateOf(existingCourse?.description ?: "") }
     var category by remember { mutableStateOf(existingCourse?.category ?: "") }
     val isLoading by viewModel.isLoading.observeAsState(false)
+    val currentUser = viewModel.getCurrentUser()
 
     Box(
         modifier = Modifier.fillMaxSize().background(Color(0xFFF1F3F6)),
@@ -54,7 +56,7 @@ fun AddCourseScreen(
                 OutlinedTextField(
                     value = name, onValueChange = { name = it },
                     label = { Text("Course Title") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("courseTitle"),
                     shape = RoundedCornerShape(12.dp)
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -62,7 +64,7 @@ fun AddCourseScreen(
                 OutlinedTextField(
                     value = desc, onValueChange = { desc = it },
                     label = { Text("Description") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("courseDesc"),
                     minLines = 3,
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -71,7 +73,7 @@ fun AddCourseScreen(
                 OutlinedTextField(
                     value = category, onValueChange = { category = it },
                     label = { Text("Category") },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag("courseCategory"),
                     shape = RoundedCornerShape(12.dp)
                 )
 
@@ -84,13 +86,15 @@ fun AddCourseScreen(
                             courseName = name,
                             description = desc,
                             category = category,
-                            teacherName = existingCourse?.teacherName ?: "Admin"
+                            teacherId = existingCourse?.teacherId ?: currentUser?.uid ?: "",
+                            teacherName = existingCourse?.teacherName ?: "Admin",
+                            imageUrl = existingCourse?.imageUrl ?: ""
                         )
                         viewModel.addCourse(courseToSave) { success, _ ->
                             if (success) onBack()
                         }
                     },
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                    modifier = Modifier.fillMaxWidth().height(50.dp).testTag("publishCourse"),
                     colors = ButtonDefaults.buttonColors(containerColor = Blue),
                     shape = RoundedCornerShape(12.dp)
                 ) {
@@ -99,7 +103,7 @@ fun AddCourseScreen(
                         fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
 
-                TextButton(onClick = onBack) {
+                TextButton(onClick = onBack, modifier = Modifier.testTag("cancelButton")) {
                     Text("Cancel", color = Color.Gray)
                 }
             }
