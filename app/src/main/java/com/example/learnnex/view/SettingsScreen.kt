@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag // STEP 1: ADD THIS IMPORT for testing
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,7 +26,8 @@ import com.example.learnnex.ui.theme.Blue
 
 @Composable
 fun SettingsScreen(
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val activity = context as Activity
@@ -51,36 +52,30 @@ fun SettingsScreen(
             elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Column {
-                // STEP 3: Pass the navigation callback to the Profile item
                 SettingItem(
                     icon = Icons.Default.Person,
                     title = "Account Profile",
                     onClick = { onNavigateToProfile() }
                 )
-
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
 
-                // Other items with empty callbacks for now
-                SettingItem(icon = Icons.Default.Notifications, title = "Notifications", onClick = {})
+                SettingItem(
+                    icon = Icons.Default.Notifications,
+                    title = "Notifications",
+                    onClick = { onNavigateToNotifications() }
+                )
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+
                 SettingItem(icon = Icons.Default.Shield, title = "Privacy & Security", onClick = {})
             }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Text(
-            text = "Account Actions",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = Color.Gray,
-            modifier = Modifier.padding(start = 8.dp, bottom = 8.dp)
-        )
-
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .testTag("logout_button") // STEP 4: ADD testTag for Espresso testing
+                .testTag("logout_card")
                 .clickable {
                     val intent = Intent(activity, LoginActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -97,27 +92,18 @@ fun SettingsScreen(
             ) {
                 Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red)
                 Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Logout",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Red,
-                    fontSize = 16.sp
-                )
+                Text("Logout", fontWeight = FontWeight.Bold, color = Color.Red, fontSize = 16.sp)
             }
         }
     }
 }
 
 @Composable
-fun SettingItem(
-    icon: ImageVector,
-    title: String,
-    onClick: () -> Unit // STEP 5: Add onClick parameter here
-) {
+fun SettingItem(icon: ImageVector, title: String, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .testTag("setting_$title") // STEP 6: ADD testTag to identify nodes in testing
+            .testTag("setting_$title")
             .clickable { onClick() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically

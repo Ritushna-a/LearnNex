@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.example.learnnex.R
 import com.example.learnnex.model.CourseModel
@@ -57,7 +58,7 @@ fun DashboardBody() {
     var showAddCourse by remember { mutableStateOf(false) }
     var editingCourse by remember { mutableStateOf<CourseModel?>(null) }
     var viewingCourse by remember { mutableStateOf<CourseModel?>(null) }
-
+    var isViewingNotifications by remember { mutableStateOf(false) }
     val currentUser = userViewModel.getCurrentUser()
     val isAdmin = currentUser?.email == "admin@gmail.com"
 
@@ -93,17 +94,20 @@ fun DashboardBody() {
                         navigationIconContentColor = White
                     ),
                     title = {
-                        Text(when(selectedIndex) {
-                            0 -> "LearnNex"
-                            1 -> "Enrolled Courses"
-                            2 -> "Profile"
-                            else -> "Settings"
-                        })
+                        Text(
+                            when (selectedIndex) {
+                                0 -> "LearnNex"
+                                1 -> "Enrolled Courses"
+                                2 -> "Profile"
+                                else -> "Settings"
+                            }
+                        )
                     },
                     navigationIcon = {
                         IconButton(onClick = {
                             val intent = Intent(activity, LoginActivity::class.java)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            intent.flags =
+                                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                             activity.startActivity(intent)
                         }) {
                             Icon(painterResource(R.drawable.outline_arrow_back_ios_24), null)
@@ -115,26 +119,45 @@ fun DashboardBody() {
                 NavigationBar(containerColor = White) {
                     ListNav.forEachIndexed { index, item ->
                         NavigationBarItem(
+                            modifier = Modifier.testTag(
+                                "nav_${
+                                    item.label.lowercase().replace(" ", "")
+                                }"
+                            ),
                             icon = { Icon(painterResource(item.icon), null) },
                             label = { Text(item.label) },
-                            onClick = { selectedIndex = index },
-                            selected = selectedIndex == index
+                            onClick = {
+                                selectedIndex = index
+                                isViewingNotifications = false
+                            },
+                            selected = !isViewingNotifications && selectedIndex == index
                         )
                     }
                 }
             }
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                when (selectedIndex) {
-                    0 -> HomeScreen(
-                        viewModel = userViewModel,
-                        onNavigateToAdd = { showAddCourse = true },
-                        onNavigateToEdit = { editingCourse = it },
-                        onNavigateToContent = { viewingCourse = it }
-                    )
-                    1 -> MyCoursesScreen(userViewModel, onNavigateToContent = { viewingCourse = it })
-                    2 -> ProfileScreen()
-                    3 -> SettingsScreen(onNavigateToProfile = {selectedIndex = 2 })
+                if (isViewingNotifications) {
+                    NotificationScreen(onBack = { isViewingNotifications = false })
+                } else {
+                    when (selectedIndex) {
+                        0 -> HomeScreen(
+                            viewModel = userViewModel,
+                            onNavigateToAdd = { showAddCourse = true },
+                            onNavigateToEdit = { editingCourse = it },
+                            onNavigateToContent = { viewingCourse = it }
+                        )
+
+                        1 -> MyCoursesScreen(
+                            userViewModel,
+                            onNavigateToContent = { viewingCourse = it })
+
+                        2 -> ProfileScreen()
+                        3 -> SettingsScreen(
+                            onNavigateToProfile = { selectedIndex = 2 },
+                            onNavigateToNotifications = { isViewingNotifications = true }
+                        )
+                    }
                 }
             }
         }
