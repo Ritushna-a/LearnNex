@@ -9,20 +9,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -35,13 +25,13 @@ import com.example.learnnex.ui.theme.White
 import com.example.learnnex.viewmodel.UserViewModel
 
 data class NavItem(val label: String, val icon: Int)
+
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             DashboardBody()
-
         }
     }
 }
@@ -54,13 +44,11 @@ fun DashboardBody() {
 
     val userViewModel = remember { UserViewModel(UserRepoImpl()) }
     var selectedIndex by remember { mutableStateOf(0) }
+    var isViewingNotifications by remember { mutableStateOf(false) }
 
     var showAddCourse by remember { mutableStateOf(false) }
     var editingCourse by remember { mutableStateOf<CourseModel?>(null) }
     var viewingCourse by remember { mutableStateOf<CourseModel?>(null) }
-    var isViewingNotifications by remember { mutableStateOf(false) }
-    val currentUser = userViewModel.getCurrentUser()
-    val isAdmin = currentUser?.email == "admin@gmail.com"
 
     if (showAddCourse || editingCourse != null) {
         AddCourseScreen(
@@ -78,7 +66,7 @@ fun DashboardBody() {
             onBack = { viewingCourse = null }
         )
     } else {
-        val ListNav = listOf(
+        val listNav = listOf(
             NavItem("Home", R.drawable.outline_home_24),
             NavItem("My Courses", R.drawable.baseline_book_24),
             NavItem("Profile", R.drawable.outline_person_24),
@@ -91,39 +79,49 @@ fun DashboardBody() {
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Blue,
                         titleContentColor = White,
-                        navigationIconContentColor = White
+                        navigationIconContentColor = White,
+                        actionIconContentColor = White
                     ),
                     title = {
-                        Text(
-                            when (selectedIndex) {
-                                0 -> "LearnNex"
-                                1 -> "Enrolled Courses"
-                                2 -> "Profile"
-                                else -> "Settings"
-                            }
-                        )
+                        Text(when {
+                            isViewingNotifications -> "Notifications"
+                            selectedIndex == 0 -> "LearnNex"
+                            selectedIndex == 1 -> "Enrolled Courses"
+                            selectedIndex == 2 -> "Profile"
+                            else -> "Settings"
+                        })
                     },
                     navigationIcon = {
                         IconButton(onClick = {
-                            val intent = Intent(activity, LoginActivity::class.java)
-                            intent.flags =
-                                Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            activity.startActivity(intent)
+                            if (isViewingNotifications) {
+                                isViewingNotifications = false
+                            } else {
+                                val intent = Intent(activity, LoginActivity::class.java)
+                                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                                activity.startActivity(intent)
+                                activity.finish()
+                            }
                         }) {
                             Icon(painterResource(R.drawable.outline_arrow_back_ios_24), null)
+                        }
+                    },
+                    actions = {
+                        if (!isViewingNotifications) {
+                            IconButton(
+                                onClick = { isViewingNotifications = true },
+                                modifier = Modifier.testTag("top_notification_bell")
+                            ) {
+                                Icon(Icons.Default.Notifications, null)
+                            }
                         }
                     }
                 )
             },
             bottomBar = {
                 NavigationBar(containerColor = White) {
-                    ListNav.forEachIndexed { index, item ->
+                    listNav.forEachIndexed { index, item ->
                         NavigationBarItem(
-                            modifier = Modifier.testTag(
-                                "nav_${
-                                    item.label.lowercase().replace(" ", "")
-                                }"
-                            ),
+                            modifier = Modifier.testTag("nav_${item.label.lowercase().replace(" ", "")}"),
                             icon = { Icon(painterResource(item.icon), null) },
                             label = { Text(item.label) },
                             onClick = {
@@ -141,17 +139,8 @@ fun DashboardBody() {
                     NotificationScreen(onBack = { isViewingNotifications = false })
                 } else {
                     when (selectedIndex) {
-                        0 -> HomeScreen(
-                            viewModel = userViewModel,
-                            onNavigateToAdd = { showAddCourse = true },
-                            onNavigateToEdit = { editingCourse = it },
-                            onNavigateToContent = { viewingCourse = it }
-                        )
-
-                        1 -> MyCoursesScreen(
-                            userViewModel,
-                            onNavigateToContent = { viewingCourse = it })
-
+                        0 -> HomeScreen(userViewModel, { showAddCourse = true }, { editingCourse = it }, { viewingCourse = it })
+                        1 -> MyCoursesScreen(userViewModel, { viewingCourse = it })
                         2 -> ProfileScreen()
                         3 -> SettingsScreen(
                             onNavigateToProfile = { selectedIndex = 2 },

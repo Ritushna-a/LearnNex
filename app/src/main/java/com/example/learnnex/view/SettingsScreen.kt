@@ -5,14 +5,13 @@ import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +30,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val activity = context as Activity
+    var showPrivacyPolicy by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -38,61 +38,71 @@ fun SettingsScreen(
             .background(Color(0xFFFBFBFE))
             .padding(20.dp)
     ) {
-        Text(
-            text = "Settings",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
-
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column {
-                SettingItem(
-                    icon = Icons.Default.Person,
-                    title = "Account Profile",
-                    onClick = { onNavigateToProfile() }
-                )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-
-                SettingItem(
-                    icon = Icons.Default.Notifications,
-                    title = "Notifications",
-                    onClick = { onNavigateToNotifications() }
-                )
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
-
-                SettingItem(icon = Icons.Default.Shield, title = "Privacy & Security", onClick = {})
+        if (showPrivacyPolicy) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = { showPrivacyPolicy = false }) {
+                    Icon(Icons.Default.ArrowBack, null)
+                }
+                Text("Privacy & Security", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
-        }
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    text = "Your privacy is important to us. LearnNex ensures that your data is encrypted and never shared with third parties without your consent. We use industry-standard security protocols to protect your account information.",
+                    fontSize = 16.sp,
+                    color = Color.DarkGray,
+                    lineHeight = 24.sp
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("• Data Encryption\n• Secure Login\n• Privacy Controls", fontWeight = FontWeight.Bold)
+            }
+        } else {
+            Text(
+                text = "Settings",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .testTag("logout_card")
-                .clickable {
-                    val intent = Intent(activity, LoginActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    activity.startActivity(intent)
-                    activity.finish()
-                },
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
             ) {
-                Icon(Icons.Default.ExitToApp, contentDescription = null, tint = Color.Red)
-                Spacer(modifier = Modifier.width(12.dp))
-                Text("Logout", fontWeight = FontWeight.Bold, color = Color.Red, fontSize = 16.sp)
+                Column {
+                    SettingItem(icon = Icons.Default.Person, title = "Account Profile", onClick = onNavigateToProfile)
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+                    SettingItem(icon = Icons.Default.Notifications, title = "Notifications", onClick = onNavigateToNotifications)
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), thickness = 0.5.dp)
+                    SettingItem(icon = Icons.Default.Shield, title = "Privacy & Security", onClick = { showPrivacyPolicy = true })
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("logout_card")
+                    .clickable {
+                        val intent = Intent(activity, LoginActivity::class.java)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        activity.startActivity(intent)
+                        activity.finish()
+                    },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.ExitToApp, null, tint = Color.Red)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("Logout", fontWeight = FontWeight.Bold, color = Color.Red, fontSize = 16.sp)
+                }
             }
         }
     }
@@ -114,7 +124,7 @@ fun SettingItem(icon: ImageVector, title: String, onClick: () -> Unit) {
                 .background(Blue.copy(alpha = 0.1f), RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(icon, contentDescription = null, tint = Blue, modifier = Modifier.size(20.dp))
+            Icon(icon, null, tint = Blue, modifier = Modifier.size(20.dp))
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(text = title, fontWeight = FontWeight.Medium, fontSize = 16.sp)
