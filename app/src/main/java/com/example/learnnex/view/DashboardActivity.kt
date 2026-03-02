@@ -134,7 +134,7 @@ fun DashboardBody() {
                     )
                     1 -> MyCoursesScreen(userViewModel, onNavigateToContent = { viewingCourse = it })
                     2 -> ProfileScreen()
-                    3 -> SettingsScreen()
+                    3 -> SettingsScreen(onNavigateToProfile = {selectedIndex = 2 })
                 }
             }
         }
