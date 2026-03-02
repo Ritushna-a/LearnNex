@@ -66,7 +66,7 @@ class UserRepoImpl: UserRepo {
     }
 
     override fun getUserById(userId: String, callback: (Boolean, UserModel?) -> Unit) {
-        ref.child(userId).addListenerForSingleValueEvent(object : ValueEventListener {
+        ref.child(userId).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val user = snapshot.getValue(UserModel::class.java)
                 callback(user != null, user)

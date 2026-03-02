@@ -52,6 +52,12 @@ fun ProfileUI(user: UserModel, viewModel: UserViewModel) {
     var phone by remember { mutableStateOf(user.phoneNum) }
     var dob by remember { mutableStateOf(user.dob) }
 
+    LaunchedEffect(user) {
+        name = user.name
+        phone = user.phoneNum
+        dob = user.dob
+    }
+
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
 
         Column(modifier = Modifier.padding(20.dp)) {
@@ -70,7 +76,8 @@ fun ProfileUI(user: UserModel, viewModel: UserViewModel) {
                 onClick = {
                     if (isEditing) {
                         val updated = user.copy(name = name, phoneNum = phone, dob = dob)
-                        viewModel.updateProfile(user.userId, updated) { success, _ -> if (success) isEditing = false }
+                        viewModel.updateProfile(user.userId, updated) { success, _ -> if (success) isEditing = false
+                        viewModel.getUserById(user.userId)}
                     } else isEditing = true
                 },
                 modifier = Modifier.fillMaxWidth().height(55.dp),

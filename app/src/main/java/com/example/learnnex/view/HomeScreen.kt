@@ -5,7 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -40,9 +42,13 @@ fun HomeScreen(
     var courseToDelete by remember { mutableStateOf<CourseModel?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(isAdmin) {
         viewModel.getAllCourses()
-        viewModel.getMyCourses()
+        if (isAdmin) {
+            viewModel.fetchEnrollmentsForAdmin()
+        } else {
+            viewModel.getMyCourses()
+        }
     }
 
     Scaffold(
@@ -105,22 +111,42 @@ fun HomeScreen(
             }
 
             selectedCourseForDetail?.let { course ->
-                val isEnrolled = myEnrolledList?.any { it.courseId == course.courseId } ?: false
+                val studentsEnrolled = myEnrolledList?.filter { it.courseId == course.courseId } ?: emptyList()
+                val isEnrolled = myEnrolledList?.any { it.courseId == course.courseId && it.userId == currentUser?.uid } ?: false
 
                 AlertDialog(
                     onDismissRequest = { selectedCourseForDetail = null },
                     title = { Text(course.courseName, fontWeight = FontWeight.Bold) },
                     text = {
-                        Column {
+                        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                             Text(course.description)
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            if (isAdmin) {
+                                Text("Enrolled Students (${studentsEnrolled.size}):",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = Blue)
+
+                                if (studentsEnrolled.isEmpty()) {
+                                    Text("No students enrolled yet.", fontSize = 13.sp, color = Color.Gray)
+                                } else {
+                                    studentsEnrolled.forEach { enrollment ->
+                                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                                            Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
+                                            Spacer(modifier = Modifier.width(8.dp))
+                                            Text(enrollment.name, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+
                             Text("Category: ${course.category}", color = Blue, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-                            Text("Instructor: ${course.teacherName}", color = Color.Gray, fontSize = 13.sp)
                         }
                     },
                     confirmButton = {
                         if (isEnrolled || isAdmin) {
-                            // If already enrolled or is admin, go straight to lessons
                             Button(
                                 onClick = {
                                     onNavigateToContent(course)
@@ -130,12 +156,11 @@ fun HomeScreen(
                                 shape = RoundedCornerShape(8.dp)
                             ) { Text("Go to Lessons") }
                         } else {
-                            // If NOT enrolled, show Enroll button
                             Button(
                                 onClick = {
                                     viewModel.enrollInCourse(course) { success, _ ->
                                         if (success) {
-                                            viewModel.getMyCourses() // Refresh enrollment list
+                                            viewModel.getMyCourses()
                                             selectedCourseForDetail = null
                                         }
                                     }
