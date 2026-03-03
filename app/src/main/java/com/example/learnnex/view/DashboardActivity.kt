@@ -19,12 +19,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.example.learnnex.R
 import com.example.learnnex.model.CourseModel
+import com.example.learnnex.repository.CourseRepoImpl
 import com.example.learnnex.repository.UserRepoImpl
 import com.example.learnnex.ui.theme.Blue
 import com.example.learnnex.ui.theme.White
+import com.example.learnnex.viewmodel.CourseViewModel
 import com.example.learnnex.viewmodel.UserViewModel
 
-data class NavItem(val label: String, val icon: Int)
+// --- FIX: Define NavItem so the compiler recognizes label and icon ---
+data class NavItem(
+    val label: String,
+    val icon: Int
+)
 
 class DashboardActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,9 +47,12 @@ class DashboardActivity : ComponentActivity() {
 fun DashboardBody() {
     val context = LocalContext.current
     val activity = context as Activity
+    val userRepo = remember { UserRepoImpl() }
+    val courseRepo = remember { CourseRepoImpl() }
+    val userViewModel = remember { UserViewModel(userRepo) }
+    val courseViewModel = remember { CourseViewModel(courseRepo, userRepo) }
 
-    val userViewModel = remember { UserViewModel(UserRepoImpl()) }
-    var selectedIndex by remember { mutableStateOf(0) }
+    var selectedIndex by remember { mutableIntStateOf(0) }
     var isViewingNotifications by remember { mutableStateOf(false) }
 
     var showAddCourse by remember { mutableStateOf(false) }
@@ -52,7 +61,7 @@ fun DashboardBody() {
 
     if (showAddCourse || editingCourse != null) {
         AddCourseScreen(
-            viewModel = userViewModel,
+            viewModel = courseViewModel,
             onBack = {
                 showAddCourse = false
                 editingCourse = null
@@ -62,7 +71,7 @@ fun DashboardBody() {
     } else if (viewingCourse != null) {
         CourseContentScreen(
             course = viewingCourse!!,
-            viewModel = userViewModel,
+            viewModel = courseViewModel,
             onBack = { viewingCourse = null }
         )
     } else {
@@ -96,6 +105,7 @@ fun DashboardBody() {
                             if (isViewingNotifications) {
                                 isViewingNotifications = false
                             } else {
+                                userViewModel.logout()
                                 val intent = Intent(activity, LoginActivity::class.java)
                                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                 activity.startActivity(intent)
@@ -139,9 +149,17 @@ fun DashboardBody() {
                     NotificationScreen(onBack = { isViewingNotifications = false })
                 } else {
                     when (selectedIndex) {
-                        0 -> HomeScreen(userViewModel, { showAddCourse = true }, { editingCourse = it }, { viewingCourse = it })
-                        1 -> MyCoursesScreen(userViewModel, { viewingCourse = it })
-                        2 -> ProfileScreen()
+                        0 -> HomeScreen(
+                            viewModel = courseViewModel,
+                            onAddCourse = { showAddCourse = true },
+                            onEditCourse = { editingCourse = it },
+                            onCourseClick = { viewingCourse = it }
+                        )
+                        1 -> MyCoursesScreen(
+                            viewModel = courseViewModel,
+                            onNavigateToContent = { viewingCourse = it }
+                        )
+                        2 -> ProfileScreen(viewModel = userViewModel)
                         3 -> SettingsScreen(
                             onNavigateToProfile = { selectedIndex = 2 },
                             onNavigateToNotifications = { isViewingNotifications = true }

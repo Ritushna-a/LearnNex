@@ -20,22 +20,23 @@ import androidx.compose.ui.unit.sp
 import com.example.learnnex.model.CourseModel
 import com.example.learnnex.model.LessonModel
 import com.example.learnnex.ui.theme.Blue
-import com.example.learnnex.viewmodel.UserViewModel
+import com.example.learnnex.viewmodel.CourseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CourseContentScreen(course: CourseModel, viewModel: UserViewModel, onBack: () -> Unit) {
+fun CourseContentScreen(course: CourseModel, viewModel: CourseViewModel, onBack: () -> Unit) {
     val lessons by viewModel.lessons.observeAsState(initial = emptyList())
     val isLoading by viewModel.isLoading.observeAsState(initial = false)
     val context = LocalContext.current
-    val isAdmin = viewModel.getCurrentUser()?.email == "admin@gmail.com"
+
+    val isAdmin = viewModel.isAdmin()
 
     var showAddEditDialog by remember { mutableStateOf(false) }
     var editingLesson by remember { mutableStateOf<LessonModel?>(null) }
     var viewingLesson by remember { mutableStateOf<LessonModel?>(null) }
 
     LaunchedEffect(course.courseId) {
-        viewModel.getLessons(course.courseId)
+        viewModel.fetchLessons(course.courseId)
     }
 
     Scaffold(
@@ -109,7 +110,7 @@ fun CourseContentScreen(course: CourseModel, viewModel: UserViewModel, onBack: (
                     if (success) {
                         showAddEditDialog = false
                         editingLesson = null
-                        viewModel.getLessons(course.courseId)
+                        viewModel.fetchLessons(course.courseId)
                         Toast.makeText(context, "Success!", Toast.LENGTH_SHORT).show()
                     }
                 }

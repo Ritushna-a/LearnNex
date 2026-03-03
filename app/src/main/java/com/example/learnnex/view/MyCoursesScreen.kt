@@ -9,8 +9,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material3.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -22,10 +20,10 @@ import androidx.compose.ui.unit.sp
 import com.example.learnnex.model.CourseModel
 import com.example.learnnex.model.EnrollmentModel
 import com.example.learnnex.ui.theme.Blue
-import com.example.learnnex.viewmodel.UserViewModel
+import com.example.learnnex.viewmodel.CourseViewModel
 
 @Composable
-fun MyCoursesScreen(viewModel: UserViewModel, onNavigateToContent: (CourseModel) -> Unit) {
+fun MyCoursesScreen(viewModel: CourseViewModel, onNavigateToContent: (CourseModel) -> Unit) {
     val myEnrolledList by viewModel.myCourses.observeAsState(initial = emptyList())
     var selectedEnrollment by remember { mutableStateOf<EnrollmentModel?>(null) }
 
@@ -34,7 +32,7 @@ fun MyCoursesScreen(viewModel: UserViewModel, onNavigateToContent: (CourseModel)
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFFF8F9FA))) {
-        if (myEnrolledList.isNullOrEmpty()) {
+        if (myEnrolledList.isEmpty()) {
             Text(
                 "No courses enrolled yet",
                 modifier = Modifier.align(Alignment.Center),
@@ -46,7 +44,7 @@ fun MyCoursesScreen(viewModel: UserViewModel, onNavigateToContent: (CourseModel)
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(myEnrolledList!!) { enrollment ->
+                items(myEnrolledList) { enrollment ->
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()

@@ -16,11 +16,11 @@ import androidx.compose.ui.unit.sp
 import com.example.learnnex.model.CourseModel
 import com.example.learnnex.ui.theme.Blue
 import com.example.learnnex.ui.theme.White
-import com.example.learnnex.viewmodel.UserViewModel
+import com.example.learnnex.viewmodel.CourseViewModel
 
 @Composable
 fun AddCourseScreen(
-    viewModel: UserViewModel,
+    viewModel: CourseViewModel,
     onBack: () -> Unit,
     existingCourse: CourseModel? = null
 ) {
@@ -28,7 +28,6 @@ fun AddCourseScreen(
     var desc by remember { mutableStateOf(existingCourse?.description ?: "") }
     var category by remember { mutableStateOf(existingCourse?.category ?: "") }
     val isLoading by viewModel.isLoading.observeAsState(false)
-    val currentUser = viewModel.getCurrentUser()
 
     Box(
         modifier = Modifier.fillMaxSize().background(Color(0xFFF1F3F6)),
@@ -86,11 +85,11 @@ fun AddCourseScreen(
                             courseName = name,
                             description = desc,
                             category = category,
-                            teacherId = existingCourse?.teacherId ?: currentUser?.uid ?: "",
+                            teacherId = existingCourse?.teacherId ?: "",
                             teacherName = existingCourse?.teacherName ?: "Admin",
                             imageUrl = existingCourse?.imageUrl ?: ""
                         )
-                        viewModel.addCourse(courseToSave) { success, _ ->
+                        viewModel.addOrUpdateCourse(courseToSave) { success, _ ->
                             if (success) onBack()
                         }
                     },

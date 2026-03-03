@@ -23,27 +23,28 @@ import androidx.compose.ui.unit.sp
 import com.example.learnnex.model.CourseModel
 import com.example.learnnex.ui.theme.Blue
 import com.example.learnnex.ui.theme.White
-import com.example.learnnex.viewmodel.UserViewModel
+import com.example.learnnex.viewmodel.CourseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: UserViewModel,
-    onNavigateToAdd: () -> Unit,
-    onNavigateToEdit: (CourseModel) -> Unit,
-    onNavigateToContent: (CourseModel) -> Unit
+    viewModel: CourseViewModel,
+    onAddCourse: () -> Unit,
+    onEditCourse: (CourseModel) -> Unit,
+    onCourseClick: (CourseModel) -> Unit
 ) {
     val courses by viewModel.courses.observeAsState(initial = emptyList())
     val myEnrolledList by viewModel.myCourses.observeAsState(initial = emptyList())
+
     val currentUser = viewModel.getCurrentUser()
-    val isAdmin = currentUser?.email == "admin@gmail.com"
+    val isAdmin = viewModel.isAdmin()
 
     var selectedCourseForDetail by remember { mutableStateOf<CourseModel?>(null) }
     var courseToDelete by remember { mutableStateOf<CourseModel?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
     LaunchedEffect(isAdmin) {
-        viewModel.getAllCourses()
+        viewModel.fetchAllCourses()
         if (isAdmin) {
             viewModel.fetchEnrollmentsForAdmin()
         } else {
@@ -56,13 +57,13 @@ fun HomeScreen(
             TopAppBar(
                 title = {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("Course", fontWeight = FontWeight.Bold)
+                        Text("Courses", fontWeight = FontWeight.Bold)
                     }
                 },
                 actions = {
                     if (isAdmin) {
                         IconButton(
-                            onClick = onNavigateToAdd,
+                            onClick = onAddCourse,
                             modifier = Modifier
                                 .padding(end = 12.dp)
                                 .size(40.dp)
@@ -85,7 +86,7 @@ fun HomeScreen(
                 .padding(paddingValues)
                 .background(Color(0xFFFBFBFE))
         ) {
-            if (courses.isNullOrEmpty()) {
+            if (courses.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("No courses available", color = Color.Gray)
                 }
@@ -95,7 +96,7 @@ fun HomeScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(courses!!) { course ->
+                    items(courses) { course ->
                         CourseCardHorizontal(
                             course = course,
                             isAdmin = isAdmin,
@@ -103,7 +104,7 @@ fun HomeScreen(
                                 courseToDelete = course
                                 showDeleteConfirm = true
                             },
-                            onEdit = { onNavigateToEdit(course) },
+                            onEdit = { onEditCourse(course) },
                             onClick = { selectedCourseForDetail = course }
                         )
                     }
@@ -111,8 +112,8 @@ fun HomeScreen(
             }
 
             selectedCourseForDetail?.let { course ->
-                val studentsEnrolled = myEnrolledList?.filter { it.courseId == course.courseId } ?: emptyList()
-                val isEnrolled = myEnrolledList?.any { it.courseId == course.courseId && it.userId == currentUser?.uid } ?: false
+                val studentsEnrolled = myEnrolledList.filter { it.courseId == course.courseId }
+                val isEnrolled = myEnrolledList.any { it.courseId == course.courseId && it.userId == currentUser?.uid }
 
                 AlertDialog(
                     onDismissRequest = { selectedCourseForDetail = null },
@@ -133,9 +134,10 @@ fun HomeScreen(
                                 } else {
                                     studentsEnrolled.forEach { enrollment ->
                                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-                                            Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
+                                            Icon(Icons.Default.Person, null, modifier = Modifier.size(16.dp), tint = Color.Gray)
                                             Spacer(modifier = Modifier.width(8.dp))
-                                            Text(enrollment.name, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                                            // Ensure your EnrollmentModel has a 'userName' or 'email' field
+                                            Text(enrollment.userId, fontSize = 14.sp, fontWeight = FontWeight.Medium)
                                         }
                                     }
                                 }
@@ -149,7 +151,7 @@ fun HomeScreen(
                         if (isEnrolled || isAdmin) {
                             Button(
                                 onClick = {
-                                    onNavigateToContent(course)
+                                    onCourseClick(course)
                                     selectedCourseForDetail = null
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Blue),
@@ -182,7 +184,7 @@ fun HomeScreen(
                 AlertDialog(
                     onDismissRequest = { showDeleteConfirm = false },
                     title = { Text("Delete Course", fontWeight = FontWeight.Bold) },
-                    text = { Text("Are you sure you want to delete '${courseToDelete?.courseName}'? This cannot be undone.") },
+                    text = { Text("Are you sure you want to delete '${courseToDelete?.courseName}'?") },
                     confirmButton = {
                         Button(
                             onClick = {
@@ -230,7 +232,6 @@ fun CourseCardHorizontal(
                 Icon(Icons.Default.Book, null, tint = White, modifier = Modifier.size(36.dp))
             }
 
-            // Content
             Column(
                 modifier = Modifier
                     .weight(1f)

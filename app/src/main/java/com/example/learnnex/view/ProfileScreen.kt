@@ -17,13 +17,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.learnnex.model.UserModel
-import com.example.learnnex.repository.UserRepoImpl
 import com.example.learnnex.ui.theme.Blue
 import com.example.learnnex.viewmodel.UserViewModel
 
 @Composable
-fun ProfileScreen() {
-    val viewModel: UserViewModel = remember { UserViewModel(UserRepoImpl()) }
+fun ProfileScreen(viewModel: UserViewModel) {
     val firebaseUser = viewModel.getCurrentUser()
     val userState by viewModel.users.observeAsState()
 
@@ -44,7 +42,6 @@ fun ProfileScreen() {
 
 @Composable
 fun ProfileUI(user: UserModel, viewModel: UserViewModel) {
-    val context = LocalContext.current
     val isLoading by viewModel.isLoading.observeAsState(false)
     var isEditing by remember { mutableStateOf(false) }
 
@@ -59,7 +56,6 @@ fun ProfileUI(user: UserModel, viewModel: UserViewModel) {
     }
 
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-
         Column(modifier = Modifier.padding(20.dp)) {
             if (isEditing) {
                 ProfileTextField(name, { name = it }, "Full Name", Icons.Default.Person)
@@ -72,19 +68,36 @@ fun ProfileUI(user: UserModel, viewModel: UserViewModel) {
                 InfoRow(Icons.Default.Cake, "Birthday", user.dob)
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
                 onClick = {
                     if (isEditing) {
                         val updated = user.copy(name = name, phoneNum = phone, dob = dob)
-                        viewModel.updateProfile(user.userId, updated) { success, _ -> if (success) isEditing = false
-                        viewModel.getUserById(user.userId)}
+                        viewModel.updateProfile(user.userId, updated) { success, _ -> 
+                            if (success) {
+                                isEditing = false
+                                viewModel.getUserById(user.userId)
+                            }
+                        }
                     } else isEditing = true
                 },
                 modifier = Modifier.fillMaxWidth().height(55.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Blue),
                 enabled = !isLoading
             ) {
                 if (isLoading) CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp))
-                else Text(if (isEditing) "Save" else "Edit Profile")
+                else Text(if (isEditing) "Save Changes" else "Edit Profile", fontWeight = FontWeight.Bold)
+            }
+            
+            if (isEditing) {
+                TextButton(
+                    onClick = { isEditing = false },
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+                ) {
+                    Text("Cancel", color = Color.Gray)
+                }
             }
         }
     }
